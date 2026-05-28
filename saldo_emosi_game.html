@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saldo Emosi: Office Dilemma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Nyentrik & Eye-catching Color Palette (Neon/Cyberpunk vibe) */
+            --bg-color: #0A0A0A; /* Dark almost black background */
+            --primary-dark: #121212;
+            --accent-lime: #39FF14; /* Neon Green */
+            --accent-purple: #B026FF; /* Neon Purple */
+            --accent-coral: #FF003C; /* Neon Red/Pink */
+            --accent-cyan: #00FFFF; /* Neon Cyan */
+            --accent-yellow: #FFFF00; /* Neon Yellow */
+            --card-bg: #1A1A1A; /* Dark grey for cards */
+            --text-main: #FFFFFF; /* White text for contrast */
+            --text-muted: #A0A0A0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        /* Container for Mobile View */
+        #app {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--bg-color);
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* BENTO GRID SYSTEM */
+        .bento-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .bento-box {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bento-box.full { grid-column: span 2; }
+        .bento-box.lime { background-color: var(--accent-lime); color: var(--primary-dark); }
+        .bento-box.purple { background-color: var(--accent-purple); color: white; }
+        .bento-box.dark { background-color: var(--card-bg); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+
+        /* Typography */
+        h1 { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 8px; text-shadow: 0 0 10px rgba(176, 38, 255, 0.5); }
+        h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; }
+        p { font-size: 0.95rem; line-height: 1.5; margin-bottom: 12px; }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+
+        /* Forms & Buttons */
+        input {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-dark);
+            border: 2px solid var(--text-muted);
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s, box-shadow 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { 
+            background-color: var(--accent-purple); 
+            color: white; 
+            box-shadow: 0 0 15px rgba(176, 38, 255, 0.6);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 25px rgba(176, 38, 255, 0.8);
+        }
+        
+        /* GAME UI */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px dashed var(--text-muted);
+        }
+
+        .stats-badge {
+            background: var(--card-bg);
+            border: 1px solid var(--text-muted);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Trust Meter */
+        .meter-container {
+            width: 100%;
+            background: var(--primary-dark);
+            border: 1px solid var(--text-muted);
+            border-radius: 20px;
+            height: 12px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-coral), var(--accent-lime));
+            width: 50%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-lime);
+        }
+        .meter-label { font-size: 0.8rem; font-weight: 600; text-align: center; color: var(--accent-cyan); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* Card Area */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 350px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            cursor: grab;
+        }
+
+        .card.flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 32px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: var(--card-bg);
+            border: 4px solid var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        /* Fix for reversed text: ensure backface content is upright when flipped */
+        .card-back {
+            transform: rotateY(180deg);
+            background: var(--primary-dark);
+            color: white;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.3);
+        }
+
+        .card-text { font-size: 1.3rem; font-weight: 600; line-height: 1.4; color: white;}
+        .feedback-type { font-size: 1.5rem; font-weight: 800; margin-bottom: 16px; padding: 8px 16px; border-radius: 12px; text-transform: uppercase; letter-spacing: 2px;}
+        .feedback-setoran { background: var(--accent-lime); color: var(--primary-dark); box-shadow: 0 0 15px var(--accent-lime);}
+        .feedback-tarikan { background: var(--accent-coral); color: white; box-shadow: 0 0 15px var(--accent-coral);}
+        .feedback-desc { font-size: 1rem; color: #E9ECEF; }
+
+        /* Timer */
+        .timer-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: var(--primary-dark);
+            border-radius: 10px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .timer-bar-fill {
+            height: 100%;
+            background: var(--accent-yellow);
+            width: 100%;
+            box-shadow: 0 0 10px var(--accent-yellow);
+        }
+
+        /* Action Buttons */
+        .action-area {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 20px;
+            border-radius: 24px;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            text-transform: uppercase;
+        }
+        .btn-action i { font-size: 2rem; }
+        .btn-tarikan { background: var(--accent-coral); color: white; box-shadow: 0 8px 0 #990024, 0 0 15px rgba(255, 0, 60, 0.4); }
+        .btn-tarikan:active { transform: translateY(8px); box-shadow: 0 0 0 #990024, 0 0 5px rgba(255, 0, 60, 0.4); }
+        .btn-setoran { background: var(--accent-lime); color: var(--primary-dark); box-shadow: 0 8px 0 #22990c, 0 0 15px rgba(57, 255, 20, 0.4); }
+        .btn-setoran:active { transform: translateY(8px); box-shadow: 0 0 0 #22990c, 0 0 5px rgba(57, 255, 20, 0.4); }
+
+        /* DEBRIEF SCREEN */
+        .badge-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            color: var(--accent-purple);
+        }
+        
+        .review-list {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .review-item {
+            background: var(--card-bg);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            border-left: 6px solid #ccc;
+            font-size: 0.9rem;
+        }
+        .review-item.correct { border-color: var(--accent-lime); }
+        .review-item.wrong { border-color: var(--accent-coral); }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 24px 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        #audio-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 16px; }
+        .hidden { display: none !important; }
+
+        /* Swipe Animation classes */
+        .swipe-left { transform: translateX(-150%) rotate(-20deg) !important; opacity: 0; }
+        .swipe-right { transform: translateX(150%) rotate(20deg) !important; opacity: 0; }
+
+    </style>
+</head>
+<body>
+
+<div id="app">
+    
+    <!-- 1. GATEWAY SCREEN -->
+    <div id="screen-gateway" class="screen active">
+        <div class="bento-container" style="margin-top: 10px;">
+            <div class="bento-box purple full text-center">
+                <span class="tag" style="background: var(--primary-dark); color: white;">The Emotional Bank Account</span>
+                <h1>Saldo Emosi</h1>
+                <p style="color: white;">Office Dilemma Simulation</p>
+            </div>
+            <div class="bento-box lime">
+                <h2><i class="fa-solid fa-bullseye"></i> Goal</h2>
+                <p style="font-size: 0.8rem;">Jaga saldo hubungan di zona aman. Tarikan berlebihan = kebangkrutan!</p>
+            </div>
+            <div class="bento-box dark">
+                <h2><i class="fa-solid fa-bolt"></i> Rule</h2>
+                <p style="font-size: 0.8rem;">Waktu <b>15 detik</b>/kasus. Geser/Pilih Setoran atau Tarikan.</p>
+            </div>
+        </div>
+
+        <div class="bento-box full" style="margin-bottom: auto; background-color: var(--card-bg);">
+            <h2 style="font-size: 1.2rem; color: white;">Mission Briefing</h2>
+            <input type="text" id="playerName" placeholder="Nama Lengkap" required>
+            <input type="text" id="playerNIK" placeholder="Nomor Induk Karyawan (NIK)" required>
+            <button class="btn btn-primary mt-2" id="btn-start">
+                Mulai Simulasi <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+
+        <footer>
+            Education & Training Dept. © 2026<br>
+            <i>PT Sinergi Maju</i>
+        </footer>
+    </div>
+
+    <!-- 2. CORE GAMEPLAY SCREEN -->
+    <div id="screen-game" class="screen">
+        <div class="top-bar">
+            <div class="stats-badge">
+                <i class="fa-solid fa-fire" style="color: var(--accent-coral);"></i> x<span id="streakDisplay">0</span>
+            </div>
+            <div class="stats-badge">
+                <i class="fa-solid fa-star" style="color: #F4C430;"></i> <span id="scoreDisplay">0</span> Pts
+            </div>
+            <button id="audio-toggle"><i class="fa-solid fa-volume-high"></i></button>
+        </div>
+
+        <div class="meter-container">
+            <div class="meter-fill" id="trustMeter"></div>
+        </div>
+        <div class="meter-label">Trust Meter: <span id="trustValue">50</span>%</div>
+
+        <div class="timer-bar-bg">
+            <div class="timer-bar-fill" id="timerBar"></div>
+        </div>
+
+        <div class="card-container" id="cardArea">
+            <div class="card" id="gameCard">
+                <div class="card-face">
+                    <span class="tag" style="background: var(--primary-dark); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">Kasus #<span id="caseNum">1</span></span>
+                    <p class="card-text" id="scenarioText">Loading scenario...</p>
+                </div>
+                <!-- card-back content is wrapped properly and flipped in CSS -->
+                <div class="card-face card-back">
+                    <div id="feedbackTag" class="feedback-type">Setoran</div>
+                    <p class="feedback-desc" id="feedbackText">Penjelasan Covey akan muncul di sini.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-area" id="actionButtons">
+            <button class="btn-action btn-tarikan" onclick="handleAnswer('tarikan')">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                Tarikan (Kiri)
+            </button>
+            <button class="btn-action btn-setoran" onclick="handleAnswer('setoran')">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                Setoran (Kanan)
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. DEBRIEF SCREEN -->
+    <div id="screen-debrief" class="screen">
+        <div class="bento-container" style="margin-top: 10px;">
+            <div class="bento-box full text-center" id="resultHeader" style="background-color: var(--primary-dark); color: white;">
+                <i class="fa-solid fa-award badge-icon" id="badgeIcon"></i>
+                <h1 id="resultTitle">High-Trust Leader</h1>
+                <p id="resultMsg">Anda berhasil membangun budaya saling percaya yang luar biasa!</p>
+            </div>
+            
+            <div class="bento-box text-center">
+                <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">Skor Akhir</p>
+                <h2 style="margin:0; font-size: 2rem;" id="finalScore">0</h2>
+            </div>
+            <div class="bento-box text-center">
+                <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">Saldo Emosi</p>
+                <h2 style="margin:0; font-size: 2rem;" id="finalTrust">0%</h2>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 10px; margin-bottom: 5px;">Post-Action Review</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Berdasarkan prinsip Stephen Covey</p>
+        
+        <div class="review-list" id="reviewContainer">
+            <!-- Review items injected here -->
+        </div>
+
+        <button class="btn btn-primary" style="margin-top: 24px; margin-bottom: 24px;" onclick="location.reload()">
+            <i class="fa-solid fa-rotate-right"></i> Main Ulang
+        </button>
+
+        <footer>
+            Data Result Recorded - <span id="displayUser"></span><br>
+            Education & Training Dept. © 2026
+        </footer>
+    </div>
+
+</div>
+
+<script>
+    /* =========================================
+       AUDIO SYSTEM (Web Audio API - Synthesizer)
+       ========================================= */
+    let audioCtx = null;
+    let isMuted = false;
+    let bgmOsc = null;
+    let bgmGain = null;
+    let isPlayingBGM = false;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playTone(freq, type, duration, vol=0.1) {
+        if (isMuted || !audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playSFX(type) {
+        if(type === 'correct') {
+            playTone(600, 'sine', 0.1, 0.2);
+            setTimeout(() => playTone(800, 'sine', 0.15, 0.2), 100);
+        } else if (type === 'wrong') {
+            playTone(300, 'sawtooth', 0.3, 0.2);
+            setTimeout(() => playTone(250, 'sawtooth', 0.3, 0.2), 100);
+        } else if (type === 'swipe') {
+            playTone(400, 'triangle', 0.1, 0.1);
+        }
+    }
+
+    // Simple Lo-Fi Gen Z Ambient Loop
+    const melody = [261.63, 329.63, 392.00, 329.63]; // C E G E
+    let noteIndex = 0;
+    
+    function playBGM() {
+        if (isMuted || !audioCtx) return;
+        
+        bgmGain = audioCtx.createGain();
+        bgmGain.gain.value = 0.03; // Very quiet background
+        bgmGain.connect(audioCtx.destination);
+
+        function scheduleNote() {
+            if (!isPlayingBGM || isMuted) return;
+            bgmOsc = audioCtx.createOscillator();
+            bgmOsc.type = 'sine';
+            bgmOsc.frequency.value = melody[noteIndex % melody.length] / 2; // Low octave
+            bgmOsc.connect(bgmGain);
+            bgmOsc.start();
+            bgmOsc.stop(audioCtx.currentTime + 0.5);
+            noteIndex++;
+            setTimeout(scheduleNote, 500);
+        }
+        isPlayingBGM = true;
+        scheduleNote();
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        const btn = document.getElementById('audio-toggle');
+        if(isMuted) {
+            btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            isPlayingBGM = false;
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+            initAudio();
+            playBGM();
+        }
+    }
+    document.getElementById('audio-toggle').addEventListener('click', toggleMute);
+
+    /* =========================================
+       CONTENT BANK (10 Skenario Covey)
+       ========================================= */
+    const scenarios = [
+        {
+            text: "Bales chat tim 'Oke' aja, padahal request-nya sangat panjang dan butuh detail pengerjaan.",
+            type: "tarikan",
+            theory: "Unclarified Expectations (Harapan tak jelas). Menimbulkan asumsi dan miskomunikasi di tim."
+        },
+        {
+            text: "Ngeluangkan 5 menit awal meeting Zoom buat nanya kabar personal & kondisi beban kerja tim.",
+            type: "setoran",
+            theory: "Understanding the Individual. Membangun rasa aman dan empati sebelum bahas pekerjaan."
+        },
+        {
+            text: "Janji ngirim revisi jam 3 sore, tapi jam 5 baru dikirim tanpa ngabarin klien/atasan dulu.",
+            type: "tarikan",
+            theory: "Breaking Commitments. Mengingkari janji kecil merusak fondasi kepercayaan secara instan."
+        },
+        {
+            text: "Ngomongin kesalahan anak magang di grup chat divisi yang ada Manager di dalamnya.",
+            type: "tarikan",
+            theory: "Lack of Personal Integrity. Mempermalukan orang di depan umum menguras saldo emosi drastis."
+        },
+        {
+            text: "Langsung bilang 'Sori ya my bad, gue perbaiki sekarang' pas sadar ngasih brief yang salah.",
+            type: "setoran",
+            theory: "Apologize Sincerely. Mengakui kesalahan tanpa defensif justru menambah deposit kepercayaan."
+        },
+        {
+            text: "Ucapin makasih dan nge-tag divisi lain di channel Slack pas project besar beres.",
+            type: "setoran",
+            theory: "Attending to Little Things. Penghargaan kecil membuktikan bahwa Anda tidak *take it for granted*."
+        },
+        {
+            text: "Ngasih tugas ke junior tapi instruksinya cuma 'Tolong kerjain kayak biasa aja ya bro'.",
+            type: "tarikan",
+            theory: "Unclarified Expectations. Berasumsi orang lain tahu apa yang Anda mau adalah sumber konflik."
+        },
+        {
+            text: "Dengerin curhatan rekan kerja yang burn-out tanpa langsung motong ngasih solusi sok tahu.",
+            type: "setoran",
+            theory: "Understanding the Individual. Mendengar untuk memahami, bukan mendengar untuk membalas."
+        },
+        {
+            text: "Diam-diam ngerjain bagian rekan kerja karena dia lambat, tanpa diajak komunikasi dulu.",
+            type: "tarikan",
+            theory: "Lack of Open Communication. Terlihat baik, tapi diam-diam merusak sistem tanggung jawab tim."
+        },
+        {
+            text: "Membela rekan kerja yang sedang dikritik secara tidak adil saat ia tidak ada di ruangan meeting.",
+            type: "setoran",
+            theory: "Showing Personal Integrity. Loyal pada yang tidak hadir membangun kepercayaan pada yang hadir."
+        }
+    ];
+
+    /* =========================================
+       GAME STATE & LOGIC
+       ========================================= */
+    let currentIdx = 0;
+    let score = 0;
+    let trust = 50; // Start at 50%
+    let streak = 0;
+    let timer;
+    let timeLeft = 15; // Changed from 5 to 15 seconds
+    let userData = { name: '', nik: '' };
+    let reviewData = [];
+    let isProcessing = false;
+
+    // DOM Elements
+    const sGateway = document.getElementById('screen-gateway');
+    const sGame = document.getElementById('screen-game');
+    const sDebrief = document.getElementById('screen-debrief');
+    
+    // UI Elements
+    const elCard = document.getElementById('gameCard');
+    const elScenarioText = document.getElementById('scenarioText');
+    const elFeedbackTag = document.getElementById('feedbackTag');
+    const elFeedbackText = document.getElementById('feedbackText');
+    const elCaseNum = document.getElementById('caseNum');
+    const elTrustMeter = document.getElementById('trustMeter');
+    const elTrustValue = document.getElementById('trustValue');
+    const elScore = document.getElementById('scoreDisplay');
+    const elStreak = document.getElementById('streakDisplay');
+    const elTimerBar = document.getElementById('timerBar');
+    const actionButtons = document.getElementById('actionButtons');
+
+    // Shuffle Array for Randomness
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Start Game
+    document.getElementById('btn-start').addEventListener('click', () => {
+        const name = document.getElementById('playerName').value.trim();
+        const nik = document.getElementById('playerNIK').value.trim();
+        
+        if(!name || !nik) {
+            alert('Mohon lengkapi Nama dan NIK untuk keperluan LMS.');
+            return;
+        }
+        
+        userData = { name, nik };
+        
+        // Initialize Audio on user interaction
+        initAudio();
+        if(!isMuted) playBGM();
+        
+        shuffleArray(scenarios);
+        
+        sGateway.classList.remove('active');
+        sGame.classList.add('active');
+        
+        loadCard();
+    });
+
+    function updateStatsUI() {
+        // Constrain trust 0-100
+        trust = Math.max(0, Math.min(100, trust));
+        
+        elTrustMeter.style.width = trust + '%';
+        elTrustValue.innerText = trust;
+        
+        if(trust > 70) elTrustMeter.style.background = 'linear-gradient(90deg, #A8C200, #D4F500)'; // Green/Lime
+        else if(trust > 30) elTrustMeter.style.background = 'linear-gradient(90deg, #FFC107, #FF9800)'; // Yellow/Orange
+        else elTrustMeter.style.background = 'linear-gradient(90deg, #D9624E, #FF7E67)'; // Red/Coral
+
+        elScore.innerText = score;
+        elStreak.innerText = streak;
+    }
+
+    function loadCard() {
+        if(currentIdx >= scenarios.length) {
+            endGame();
+            return;
+        }
+
+        isProcessing = false;
+        elCard.classList.remove('flipped', 'swipe-left', 'swipe-right');
+        actionButtons.style.opacity = '1';
+        actionButtons.style.pointerEvents = 'auto';
+        
+        const data = scenarios[currentIdx];
+        elCaseNum.innerText = currentIdx + 1;
+        elScenarioText.innerText = data.text;
+        
+        // Reset Timer (15 seconds)
+        timeLeft = 15;
+        elTimerBar.style.width = '100%';
+        elTimerBar.style.transition = 'width 15s linear'; // Transition matches new duration
+        
+        // Force reflow before applying transition
+        void elTimerBar.offsetWidth;
+        elTimerBar.style.width = '0%';
+        
+        clearInterval(timer);
+        timer = setInterval(() => {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                handleAnswer('timeout');
+            }
+        }, 100);
+    }
+
+    function handleAnswer(userChoice) {
+        if (isProcessing) return;
+        isProcessing = true;
+        clearInterval(timer);
+        elTimerBar.style.transition = 'none'; // stop animation
+
+        const data = scenarios[currentIdx];
+        const isCorrect = userChoice === data.type;
+        
+        // Disable buttons
+        actionButtons.style.opacity = '0.5';
+        actionButtons.style.pointerEvents = 'none';
+
+        // Calculate Logic
+        let pts = 0;
+        let trustDiff = 0;
+
+        if (userChoice === 'timeout') {
+            streak = 0;
+            trustDiff = -10; // Penalty
+            playSFX('wrong');
+            showFeedback(data, false, "WAKTU HABIS!");
+        } else if (isCorrect) {
+            streak++;
+            pts = 100 * (1 + (streak * 0.1)); // Combo multiplier
+            score += Math.round(pts);
+            trustDiff = 10;
+            playSFX('correct');
+            showFeedback(data, true, data.type === 'setoran' ? "+ SETORAN" : "- TARIKAN");
+        } else {
+            streak = 0;
+            trustDiff = -15; // Penalty lebih besar kalau salah nebak
+            playSFX('wrong');
+            showFeedback(data, false, "SALAH TEBAK!");
+        }
+
+        trust += trustDiff;
+        updateStatsUI();
+
+        // Record for debrief
+        reviewData.push({
+            text: data.text,
+            isCorrect: isCorrect && userChoice !== 'timeout',
+            theory: data.theory,
+            type: data.type
+        });
+
+        // Flip Card Animation
+        setTimeout(() => {
+            elCard.classList.add('flipped');
+        }, 200);
+
+        // Next Card after delay
+        setTimeout(() => {
+            // Visual swipe out based on answer
+            if (userChoice === 'tarikan' || (userChoice === 'timeout' && data.type === 'setoran')) {
+                elCard.classList.add('swipe-left');
+            } else {
+                elCard.classList.add('swipe-right');
+            }
+            playSFX('swipe');
+            
+            setTimeout(() => {
+                currentIdx++;
+                loadCard();
+            }, 400); // wait swipe animation
+            
+        }, 2500); // Time to read feedback
+    }
+
+    function showFeedback(data, isCorrect, titleText) {
+        elFeedbackTag.innerText = titleText;
+        elFeedbackText.innerText = data.theory;
+        
+        if(isCorrect || titleText === "+ SETORAN" || titleText === "- TARIKAN") {
+             if(data.type === 'setoran') {
+                 elFeedbackTag.className = 'feedback-type feedback-setoran';
+             } else {
+                 elFeedbackTag.className = 'feedback-type feedback-tarikan';
+             }
+        } else {
+             // Timeout / Wrong
+             elFeedbackTag.className = 'feedback-type feedback-tarikan';
+             elFeedbackTag.style.background = '#1E1E24'; // Dark
+        }
+    }
+
+    function endGame() {
+        sGame.classList.remove('active');
+        sDebrief.classList.add('active');
+        
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('finalTrust').innerText = trust + '%';
+        document.getElementById('displayUser').innerText = `${userData.name} (${userData.nik})`;
+
+        // Determine Badge
+        const titleEl = document.getElementById('resultTitle');
+        const msgEl = document.getElementById('resultMsg');
+        const iconEl = document.getElementById('badgeIcon');
+        const headerEl = document.getElementById('resultHeader');
+
+        if(trust >= 80) {
+            titleEl.innerText = "High-Trust Leader";
+            msgEl.innerText = "Luar biasa! Komunikasi Anda menciptakan rasa aman dan mempercepat kinerja tim.";
+            iconEl.className = "fa-solid fa-trophy badge-icon";
+            iconEl.style.color = "var(--accent-lime)";
+            headerEl.style.backgroundColor = "var(--primary-dark)";
+        } else if (trust >= 50) {
+            titleEl.innerText = "Office Diplomat";
+            msgEl.innerText = "Cukup baik, namun beberapa 'tarikan' kecil masih sering terjadi. Perhatikan hal detail!";
+            iconEl.className = "fa-solid fa-handshake badge-icon";
+            iconEl.style.color = "white";
+            headerEl.style.backgroundColor = "var(--accent-purple)";
+        } else {
+            titleEl.innerText = "Relation Bankrupt";
+            msgEl.innerText = "Waspada! Kepercayaan tim terkuras. Konflik dan miskomunikasi rentan terjadi.";
+            iconEl.className = "fa-solid fa-heart-crack badge-icon";
+            iconEl.style.color = "white";
+            headerEl.style.backgroundColor = "var(--accent-coral)";
+        }
+
+        // Render Review List
+        const container = document.getElementById('reviewContainer');
+        reviewData.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = `review-item ${item.isCorrect ? 'correct' : 'wrong'}`;
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                    <strong>Kasus #${idx + 1}</strong>
+                    <span class="tag" style="margin:0; background: ${item.type === 'setoran' ? 'var(--accent-lime)' : 'var(--accent-coral)'}; color: ${item.type==='setoran'? '#000':'#fff'}; box-shadow: 0 0 5px ${item.type === 'setoran' ? 'var(--accent-lime)' : 'var(--accent-coral)'};">${item.type.toUpperCase()}</span>
+                </div>
+                <p style="margin-bottom:8px; color: white;">"${item.text}"</p>
+                <div style="font-size: 0.8rem; color: #CCC; background: var(--primary-dark); padding: 8px; border-radius: 8px; border: 1px solid #333;">
+                    <i class="fa-solid fa-circle-info" style="color: var(--accent-cyan);"></i> ${item.theory}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        // LMS Sync Simulation
+        console.log(`[LMS Data] User: ${userData.nik}, Score: ${score}, Trust: ${trust}%`);
+    }
+
+    /* =========================================
+       TOUCH SWIPE SUPPORT (Optional enhancement)
+       ========================================= */
+    let touchstartX = 0;
+    let touchendX = 0;
+
+    elCard.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+    });
+
+    elCard.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleGesture();
+    });
+
+    function handleGesture() {
+        if(isProcessing) return;
+        const diff = touchendX - touchstartX;
+        if (diff < -50) {
+            handleAnswer('tarikan'); // Swipe Left
+        } else if (diff > 50) {
+            handleAnswer('setoran'); // Swipe Right
+        }
+    }
+
+</script>
+</body>
+</html>
